@@ -22,7 +22,7 @@ public class MovieCatalogResource {
     }
 
     @RequestMapping("/{userId}")
-    public List<CatalogItem> getCatalogItems(@PathVariable("userId") String userId) {
+    public UserRatingWithCatalog getCatalogItems(@PathVariable("userId") String userId) {
 
         // get user's catalog
         UserCatalog userCatalog = movieCatalogService.findUserCatalog(userId);
@@ -31,7 +31,7 @@ public class MovieCatalogResource {
         UserRating userRating = restTemplate.getForObject("http://localhost:8083/ratingsdata/user/" + userId, UserRating.class);
 
         // for each rated movie id, get move info & rating
-        return userCatalog.getMovieIds().stream()
+        List<CatalogItem> catalogItems = userCatalog.getMovieIds().stream()
                 .map(movieId -> {
                     MovieInfo movieInfo = restTemplate.getForObject("http://localhost:8082/movies/" + movieId, MovieInfo.class);
                     Rating rating = restTemplate.getForObject("http://localhost:8083/ratingsdata/" + movieId, Rating.class);
@@ -42,7 +42,7 @@ public class MovieCatalogResource {
                     }
                 })
                 .collect(Collectors.toList());
+
+        return new UserRatingWithCatalog(userRating, catalogItems);
     }
-
-
 }
